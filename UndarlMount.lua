@@ -182,7 +182,7 @@ function SlashCmdList.UMT(msg, editbox)
 		if found then
 			tinsert(UMTflying, rest)
 			sort(UMTflying)
-			print("Flying mount \"" .. rest .. "\" added to random mount list.")
+			print("Mount \"" .. rest .. "\" added to random flying mount list.")
 		else
 			print("\"" .. rest .. "\" was not found in the mount journal.")
 		end
@@ -199,9 +199,9 @@ function SlashCmdList.UMT(msg, editbox)
 		--Remove the mount if present
 		if mind then
 			tremove(UMTflying, mind)
-			print("Flying mount \"" .. rest .. "\" removed from random mount list.")
+			print("Mount \"" .. rest .. "\" removed from random flying mount list.")
 		else
-			print("\"" .. rest .. "\" was not found in the random mount list.")
+			print("\"" .. rest .. "\" was not found in the random flying mount list.")
 		end
 
 	elseif command == "addground" and rest ~= "" then
@@ -218,7 +218,7 @@ function SlashCmdList.UMT(msg, editbox)
 		if found then
 			tinsert(UMTground, rest)
 			sort(UMTground)
-			print("Ground mount \"" .. rest .. "\" added to random mount list.")
+			print("Mount \"" .. rest .. "\" added to random ground mount list.")
 		else
 			print("\"" .. rest .. "\" was not found in the mount journal.")
 		end
@@ -235,7 +235,7 @@ function SlashCmdList.UMT(msg, editbox)
 		--Remove the mount if present
 		if mind then
 			tremove(UMTground, mind)
-			print("Ground mount \"" .. rest .. "\" removed from random mount list.")
+			print("Mount \"" .. rest .. "\" removed from random ground mount list.")
 		else
 			print("\"" .. rest .. "\" was not found in the random mount list.")
 		end
@@ -244,6 +244,56 @@ function SlashCmdList.UMT(msg, editbox)
 		MountTable = {}
 		UMT_Init()
 		print("|cffffff78Mount Table re-initialized.|r")
+
+elseif command == "addboth" and rest ~= "" then
+		local found
+		--Initialize the Mount Table if needed
+		UMT_Init()
+		--Check for valid mount, add if so
+		for _,entry in ipairs(MountTable) do
+			if entry[1] == rest then
+				found = true
+				break
+			end
+		end
+		if found then
+			tinsert(UMTflying, rest)
+			sort(UMTflying)
+			tinsert(UMTground, rest)
+			sort(UMTground)
+			print("Mount \"" .. rest .. "\" added to both random mount lists.")
+		else
+			print("\"" .. rest .. "\" was not found in the mount journal.")
+		end
+
+elseif command == "delboth" and rest ~= "" then
+		local mind
+		--Look for mount in the player's random mount tables
+		for index, entry in ipairs(UMTflying) do
+			if entry == rest then
+				f_ind = index
+				break
+			end
+		end
+		for index, entry in ipairs(UMTground) do
+			if entry == rest then
+				g_ind = index
+				break
+			end
+		end
+		--Remove the mount if present
+		if f_ind then
+			tremove(UMTflying, f_ind)
+			print("Mount \"" .. rest .. "\" removed from random flying mount list.")
+		else
+			print("\"" .. rest .. "\" was not found in the random flying mount list.")
+		end
+		if g_ind then
+			tremove(UMTflying, g_ind)
+			print("Mount \"" .. rest .. "\" removed from random ground mount list.")
+		else
+			print("\"" .. rest .. "\" was not found in the random ground mount list.")
+		end
 
 	elseif command == "clearground" then
 		--Zero out the ground mount list
@@ -264,7 +314,9 @@ function SlashCmdList.UMT(msg, editbox)
 		print("             |cffffff78/umt delfly <mount name>|r -- remove a flying mount from the list")
 		print("             |cffffff78/umt addground <mount name>|r -- add a ground mount to the list")
 		print("             |cffffff78/umt delground <mount name>|r -- remove a ground mount from the list")
-		--print("             |cffffff78/umt init|r -- re-initialize the mount journal table")
+		print("             |cffffff78/umt addboth <mount name>|r -- add a mount to both lists")
+		print("             |cffffff78/umt delboth <mount name>|r -- add a mount to both lists")
+		print("             |cffffff78/umt init|r -- re-initialize the mount journal table")
 		print("|cffffff78Mount names must be spelled and capitalized exactly.|r")
 	end
 end
