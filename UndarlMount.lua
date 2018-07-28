@@ -34,13 +34,13 @@ local function UMT_FlyLockCheck()
 	local flylock = false
 
 	--Flying achievement checks
-	if GetCurrentMapContinent() == 7 and not FlightAchieves[1] then
-		flylock = true -- Draenor
-	elseif GetCurrentMapContinent() == 8 and not FlightAchieves[2] then
-		flylock = true -- Broken Isles
-	elseif GetCurrentMapContinent() == -1 then
-		flylock = true -- Weird places
-	end
+	--if C_Map.GetBestMapForUnit("player") == 7 and not FlightAchieves[1] then
+	--	flylock = true -- Draenor
+	--elseif GetCurrentMapContinent() == 8 and not FlightAchieves[2] then
+	--	flylock = true -- Broken Isles
+	--elseif GetCurrentMapContinent() == -1 then
+	--	flylock = true -- Weird places
+	--end
 
 	return flylock
 end
@@ -62,12 +62,12 @@ local function UMT_Mount()
 	--Initialize some variables
 	local cind, mountname, mountid
 	local cfac = UnitFactionGroup("player")
-	local vjmaps = {610,613,614,615}
+	local vjmaps = {201,203,204,205}
 
 	--print(cfac) --Debug text
 
 	--Choose a mount
-	if tContains(vjmaps, GetCurrentMapAreaID()) and IsSwimming() then
+	if tContains(vjmaps, C_Map.GetBestMapForUnit("player")) and IsSwimming() then
 		--Are we in Vashj'ir and in water? If so, mount the seahorse.
 		mountname = "Vashj'ir Seahorse"
 	--If we're in a flyable and not achievement-locked area and are high enough level to fly, then let's do that
