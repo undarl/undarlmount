@@ -5,6 +5,7 @@ SLASH_UMT1 = "/umt"
 local MountTable = {}
 UMTflying = {}
 UMTground = {}
+UMTdragride = {}
 FlightAchieves = {} -- flight unlock achievements true/false {draenor,legion)
 
 --INITIALIZATION--
@@ -63,6 +64,7 @@ local function UMT_Mount()
 	local cind, mountname, mountid
 	local cfac = UnitFactionGroup("player")
 	local vjmaps = {201,203,204,205}
+	local dragridecontinents = {"Dragon Isles"}
 
 	--print(cfac) --Debug text
 
@@ -70,8 +72,16 @@ local function UMT_Mount()
 	if tContains(vjmaps, C_Map.GetBestMapForUnit("player")) and IsSwimming() then
 		--Are we in Vashj'ir and in water? If so, mount the seahorse.
 		mountname = "Vashj'ir Seahorse"
+	--If we're in a dragonriding area, do that
+	elseif tContains(dragridecontinents, tostring(getContinent(false))) then
+		if UMTdragride[1] then
+			mountname = UMTdragride[random(#(UMTdragride))]
+			--print(mountname) --Debug text
+		else
+			print("No dragonriding mounts have been added.")
+    end
 	--If we're in a flyable and not achievement-locked area and are high enough level to fly, then let's do that
-	elseif IsFlyableArea() and not UMT_FlyLockCheck() and UnitLevel("player") >= 60 then
+	elseif IsFlyableArea() and not UMT_FlyLockCheck() and UnitLevel("player") >= 30 then
     if UMTflying[1] then
 		  mountname = UMTflying[random(#(UMTflying))]
     else
@@ -113,6 +123,25 @@ local function UMT_Mount()
 	C_MountJournal.SummonByID(mountid)
 end
 
+function getContinent(feedback)
+    local mapID = C_Map.GetBestMapForUnit("player")
+    if(mapID) then
+			local info = C_Map.GetMapInfo(mapID)
+            if(info) then
+                while(info['mapType'] and info['mapType'] > 2) do
+                    info = C_Map.GetMapInfo(info['parentMapID'])
+                end
+                if(info['mapType'] == 2) then
+                		if feedback == true then
+                	  	print(info['name'] .. " (" .. tostring(info['mapID'] .. ")"))
+                	  else
+                	  	return info['name']
+                	  end
+                end
+            end
+        end
+    end
+
 --Slash commands
 function SlashCmdList.UMT(msg, editbox)
 
@@ -123,6 +152,9 @@ function SlashCmdList.UMT(msg, editbox)
 	if command == "mount" then
 		--Run the mount command
 		UMT_Mount()
+
+	elseif command == "testmap" then
+		getContinent(true)
 
 	elseif command == "worgen" then
 		--If we're in a no-fly area, do nothing
@@ -164,9 +196,25 @@ function SlashCmdList.UMT(msg, editbox)
 		else
 			groundstring = "You have no ground mounts listed."
 		end
+
+		local dragstring = ""
+		--Build pretty list of dragonriding mounts
+		if UMTdragride[1] then
+			for iter = 1, #(UMTdragride) do
+				dragstring = dragstring .. UMTdragride[iter]
+				if iter == #(UMTdragride) then
+					dragstring = dragstring .. "."
+				else
+					dragstring = dragstring .. ", "
+				end
+			end
+		else
+			dragstring = "You have no dragonriding mounts listed."
+		end
 		--Display lists
 		print("|cffffff78Flying Mounts:|r " .. flystring)
 		print("|cffffff78Ground Mounts:|r " .. groundstring)
+		print("|cffffff78Dragonriding Mounts:|r " .. dragstring)
 
 	elseif command == "addfly" and rest ~= "" then
 		local found
@@ -239,13 +287,50 @@ function SlashCmdList.UMT(msg, editbox)
 		else
 			print("\"" .. rest .. "\" was not found in the random mount list.")
 		end
+
+	elseif command == "adddrag" and rest ~= "" then
+		local found
+		--Initialize the Mount Table if needed
+		UMT_Init()
+		--Check for valid mount, add if so
+		for _,entry in ipairs(MountTable) do
+			if entry[1] == rest then
+				found = true
+				break
+			end
+		end
+		if found then
+			tinsert(UMTdragride, rest)
+			sort(UMTdragride)
+			print("Mount \"" .. rest .. "\" added to random dragonriding mount list.")
+		else
+			print("\"" .. rest .. "\" was not found in the mount journal.")
+		end
+
+	elseif command == "deldrag" and rest ~= "" then
+		local mind
+		--Look for mount in the player's random mount table
+		for index, entry in ipairs(UMTdragride) do
+			if entry == rest then
+				mind = index
+				break
+			end
+		end
+		--Remove the mount if present
+		if mind then
+			tremove(UMTdragride, mind)
+			print("Mount \"" .. rest .. "\" removed from random dragonriding mount list.")
+		else
+			print("\"" .. rest .. "\" was not found in the random mount list.")
+		end
+
 	elseif command == "init" then
 		--Re-initialize the mount table
 		MountTable = {}
 		UMT_Init()
 		print("|cffffff78Mount Table re-initialized.|r")
 
-elseif command == "addboth" and rest ~= "" then
+	elseif command == "addboth" and rest ~= "" then
 		local found
 		--Initialize the Mount Table if needed
 		UMT_Init()
@@ -316,6 +401,8 @@ elseif command == "delboth" and rest ~= "" then
 		print("             |cffffff78/umt delground <mount name>|r -- remove a ground mount from the list")
 		print("             |cffffff78/umt addboth <mount name>|r -- add a mount to both lists")
 		print("             |cffffff78/umt delboth <mount name>|r -- add a mount to both lists")
+		print("             |cffffff78/umt adddrag <mount name>|r -- add a dragonriding mount to the list")
+		print("             |cffffff78/umt deldrag <mount name>|r -- remove a dragonriding mount from the list")
 		print("             |cffffff78/umt init|r -- re-initialize the mount journal table")
 		print("|cffffff78Mount names must be spelled and capitalized exactly.|r")
 	end
